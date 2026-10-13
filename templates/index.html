@@ -1,0 +1,173 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My ToDo | Little Steps, Big Progress</title>
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+<main class="container">
+
+    <header class="page-header">
+        <div>
+            <h1 class="brand">🌿 My ToDo</h1>
+            <p class="subtitle">
+                A little space to organize your day and find your focus.
+            </p>
+        </div>
+        <div class="today">
+            <span>YOUR DAY</span>
+            <strong>{{ today }}</strong>
+        </div>
+    </header>
+
+    <section class="summary-grid">
+        <div class="summary-card">
+            <span class="summary-label">All tasks</span>
+            <strong>{{ total_count }}</strong>
+            <span class="summary-icon">✦</span>
+        </div>
+        <div class="summary-card">
+            <span class="summary-label">Pending</span>
+            <strong>{{ pending_count }}</strong>
+            <span class="summary-icon">◷</span>
+        </div>
+        <div class="summary-card">
+            <span class="summary-label">Completed</span>
+            <strong>{{ completed_count }}</strong>
+            <span class="summary-icon">✓</span>
+        </div>
+    </section>
+
+    <section class="add-section">
+        <h2>Add a new task</h2>
+        <form class="add-card" action="{{ url_for('add_todo') }}"
+              method="POST">
+            <input type="text" name="task"
+                   placeholder="What would you like to get done?"
+                   maxlength="200" required autocomplete="off">
+
+            <label class="date-field">
+                <span>Due date</span>
+                <input type="date" name="due_date" min="{{ today }}">
+            </label>
+
+            <button type="submit">＋ Add Task</button>
+        </form>
+    </section>
+
+    <section class="tasks-section">
+        <div class="section-heading">
+            <div>
+                <h2>My Tasks</h2>
+                <p class="subtitle">Small steps make big progress.</p>
+            </div>
+            <span class="task-count">{{ todos|length }} shown</span>
+        </div>
+
+        <nav class="filters" aria-label="Filter tasks">
+            <a href="{{ url_for('index', filter='all') }}"
+               class="{{ 'active' if selected_filter == 'all' else '' }}">
+                All <span>{{ total_count }}</span>
+            </a>
+            <a href="{{ url_for('index', filter='pending') }}"
+               class="{{ 'active' if selected_filter == 'pending' else '' }}">
+                Pending <span>{{ pending_count }}</span>
+            </a>
+            <a href="{{ url_for('index', filter='completed') }}"
+               class="{{ 'active' if selected_filter == 'completed' else '' }}">
+                Completed <span>{{ completed_count }}</span>
+            </a>
+        </nav>
+
+        {% if todos %}
+            <ul class="task-list">
+                {% for todo in todos %}
+                    <li class="task-card {{ 'is-completed' if todo.completed else '' }}">
+                        <form class="toggle-form"
+                              action="{{ url_for('toggle_todo', todo_id=todo._id) }}"
+                              method="POST">
+                            <input type="hidden" name="filter"
+                                   value="{{ selected_filter }}">
+                            <input class="task-checkbox" type="checkbox"
+                                   aria-label="Mark {{ todo.task }} as {{ 'pending' if todo.completed else 'completed' }}"
+                                   {{ 'checked' if todo.completed else '' }}
+                                   onchange="this.form.submit()">
+                        </form>
+
+                        <div class="task-content">
+                            <span class="task-name">{{ todo.task }}</span>
+
+                            {% if todo.due_date %}
+                                <span class="due-date">
+                                    {% if not todo.completed and todo.due_date < today %}
+                                        ⚠ Overdue ·
+                                    {% else %}
+                                        ◷ Due ·
+                                    {% endif %}
+                                    {{ todo.due_date }}
+                                </span>
+                            {% else %}
+                                <span class="due-date no-date">No due date</span>
+                            {% endif %}
+                        </div>
+
+                        <span class="status-pill {{ 'done' if todo.completed else 'waiting' }}">
+                            {{ 'Completed' if todo.completed else 'Pending' }}
+                        </span>
+
+                        <form action="{{ url_for('delete_todo', todo_id=todo._id) }}"
+                              method="POST"
+                              onsubmit="return confirm('Delete this task?');">
+                            <input type="hidden" name="filter"
+                                   value="{{ selected_filter }}">
+                            <button class="delete-button" type="submit"
+                                    aria-label="Delete {{ todo.task }}"
+                                    title="Delete task">×</button>
+                        </form>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <div class="empty-state">
+                <div class="empty-icon">
+                    {{ '🌱' if selected_filter == 'all' else '✓' }}
+                </div>
+                <h3>
+                    {% if selected_filter == 'completed' %}
+                        Nothing completed yet
+                    {% elif selected_filter == 'pending' %}
+                        You're all caught up!
+                    {% else %}
+                        Your list is ready
+                    {% endif %}
+                </h3>
+                <p>
+                    {% if selected_filter == 'completed' %}
+                        Completed tasks will appear here.
+                    {% elif selected_filter == 'pending' %}
+                        Add a new task whenever you're ready.
+                    {% else %}
+                        Add a little goal and get started.
+                    {% endif %}
+                </p>
+                {% if selected_filter != 'all' %}
+                    <a class="back-link" href="{{ url_for('index') }}">
+                        View all tasks
+                    </a>
+                {% endif %}
+            </div>
+        {% endif %}
+    </section>
+
+    <footer>
+        <span>🌿</span> Small steps, steady progress. <span>♡</span>
+    </footer>
+
+</main>
+</body>
+</html>
