@@ -7,7 +7,8 @@ from pymongo import MongoClient
 
 app = Flask(__name__)
 
-client = MongoClient("mongodb://localhost:27017/")
+import os
+client = MongoClient(os.environ.get("MONGO_URI", "mongodb://localhost:27017/"))
 db = client["beginner_db"]
 todos_collection = db["todos"]
 
